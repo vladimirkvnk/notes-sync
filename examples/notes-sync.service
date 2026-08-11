@@ -1,0 +1,18 @@
+[Unit]
+Description=Synchronize note repositories with Git
+Documentation=https://github.com/vladimirkvnk/notes-sync
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/notes-sync run --config %h/.config/notes-sync/config.json
+Restart=on-failure
+RestartSec=10s
+TimeoutStopSec=70s
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

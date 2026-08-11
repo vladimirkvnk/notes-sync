@@ -1,0 +1,186 @@
+version: "2"
+run:
+  concurrency: 4
+  go: 1.26.5
+linters:
+  default: none
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - embeddedstructfieldcheck
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - exptostd
+    - fatcontext
+    - forcetypeassert
+    - funcorder
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - gochecksumtype
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - goprintffuncname
+    - gosec
+    - govet
+    - iface
+    - importas
+    - inamedparam
+    - ineffassign
+    - maintidx
+    - makezero
+    - modernize
+    - misspell
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - reassign
+    - recvcheck
+    - revive
+    - rowserrcheck
+    - staticcheck
+    - tagliatelle
+    - testifylint
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - usetesting
+    - whitespace
+    - wrapcheck
+  settings:
+    cyclop:
+      max-complexity: 20
+    depguard:
+      rules:
+        main:
+          list-mode: lax
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: Should be replaced by standard lib errors package
+    errcheck:
+      check-type-assertions: true
+    errorlint:
+      errorf: false
+    exhaustive:
+      default-signifies-exhaustive: true
+      explicit-exhaustive-switch: true
+    gocognit:
+      min-complexity: 30
+    goconst:
+      min-occurrences: 5
+    gocyclo:
+      min-complexity: 20
+    gosec:
+      excludes:
+        - G108
+        - G204
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+      settings:
+        shadow:
+          strict: true
+    iface:
+      enable:
+        - identical
+        - unused
+        - opaque
+    nestif:
+      min-complexity: 10
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    revive:
+      enable-all-rules: true
+      rules:
+        - name: add-constant
+          disabled: true
+        - name: cognitive-complexity
+          disabled: true
+        - name: comment-spacings
+          disabled: true
+        - name: cyclomatic
+          disabled: true
+        - name: function-length
+          disabled: true
+        - name: line-length-limit
+          disabled: true
+        - name: max-public-structs
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+        - name: unhandled-error
+          disabled: true
+    tagliatelle:
+      case:
+        use-field-name: true
+        rules:
+          json: snake
+    testifylint:
+      enable-all: true
+      disable:
+        - require-error
+    unparam:
+      check-exported: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - govet
+        text: '^shadow: declaration of "err" shadows declaration.+'
+issues:
+  max-same-issues: 50
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/vladimirkvnk)
+    goimports:
+      local-prefixes:
+        - github.com/vladimirkvnk
+    golines:
+      max-len: 160
+      reformat-tags: false

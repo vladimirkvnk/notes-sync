@@ -1,0 +1,15 @@
+{
+  "scan_interval": "2s",
+  "debounce": "2s",
+  "git_timeout": "60s",
+  "log_level": "info",
+  "notifications": true,
+  "repositories": [
+    {
+      "path": "/absolute/path/to/Notes",
+      "extensions": [".md", ".txt"],
+      "include_hidden": false,
+      "sync_interval": "5m"
+    }
+  ]
+}

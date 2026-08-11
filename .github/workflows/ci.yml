@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Build
+        run: go build ./cmd/notes-sync
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+      - name: Lint
+        run: make lint
+      - name: Test
+        run: go test ./...
+      - name: Race detector
+        run: go test -race ./...
+      - name: Vulnerability scan
+        run: make vuln
+      - name: Validate launchd plist
+        if: runner.os == 'macOS'
+        run: plutil -lint examples/com.github.vladimirkvnk.notes-sync.plist
+      - name: Validate systemd unit
+        if: runner.os == 'Linux'
+        run: |
+          sed 's#^ExecStart=.*#ExecStart=/bin/true#' examples/notes-sync.service > /tmp/notes-sync.service
+          systemd-analyze verify /tmp/notes-sync.service

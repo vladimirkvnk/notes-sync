@@ -1,0 +1,13 @@
+# Build outputs
+/notes-sync
+/bin/
+*.so
+*.dylib
+*.test
+
+# Test and coverage artifacts
+*.out
+/coverage.html
+
+# macOS metadata
+.DS_Store
