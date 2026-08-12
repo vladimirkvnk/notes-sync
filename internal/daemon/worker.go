@@ -49,6 +49,7 @@ type worker struct {
 	blockedReason    string
 	degradedReason   string
 	state            repositoryState
+	stateReason      string
 }
 
 // newWorker constructs one repository state machine.
@@ -537,6 +538,17 @@ func (w *worker) gitRun(ctx context.Context, args ...string) (string, error) {
 	defer cancel()
 	output, err := w.git.Run(commandCtx, w.info.Root, args...)
 	if err != nil {
+		var commandErr *gitx.CommandError
+		if errors.As(err, &commandErr) && strings.TrimSpace(commandErr.Stderr) != "" {
+			// Git stderr can contain credential URLs, so the reason a command
+			// failed is observable only at debug level. Without it a status
+			// code is the whole diagnosis.
+			w.logger.Debug(
+				"git command failed",
+				"operation", commandErr.Operation,
+				"stderr", strings.TrimSpace(commandErr.Stderr),
+			)
+		}
 		return output, fmt.Errorf("run Git command: %w", err)
 	}
 	return output, nil
@@ -572,7 +584,9 @@ func (w *worker) clearDegraded() {
 	w.refreshState("remote synchronization recovered")
 }
 
-// refreshState emits only actual state transitions.
+// refreshState emits state transitions and new failure reasons. A repeated
+// identical failure stays at debug level, so a stuck repository remains
+// observable without repeating one WARN on every cycle.
 func (w *worker) refreshState(reason string) {
 	next := stateHealthy
 	switch {
@@ -584,10 +598,13 @@ func (w *worker) refreshState(reason string) {
 		next = stateDegraded
 	default:
 	}
-	if next == w.state {
+	transition := next != w.state
+	if !transition && reason == w.stateReason {
+		w.logger.Debug("repository state persists", "state", next, "reason", reason)
 		return
 	}
 	w.state = next
+	w.stateReason = reason
 	if next == stateConflict {
 		// enterConflict and the pre-existing-marker path emit one richer error
 		// containing the marker location.
@@ -595,6 +612,10 @@ func (w *worker) refreshState(reason string) {
 	}
 	if next == stateHealthy {
 		w.logger.Info("repository recovered", "state", next, "reason", reason)
+		return
+	}
+	if !transition {
+		w.logger.Warn("repository state persists for a new reason", "state", next, "reason", reason)
 		return
 	}
 	w.logger.Warn("repository state changed", "state", next, "reason", reason)

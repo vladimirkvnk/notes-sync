@@ -147,9 +147,6 @@ Configure system-level rotation for the log file if needed.
 
 ## Linux autostart
 
-The provided systemd user unit preserves access to the user's home directory,
-credentials, and graphical session.
-
 ```sh
 mkdir -p ~/.config/systemd/user
 cp examples/notes-sync.service ~/.config/systemd/user/
@@ -168,6 +165,11 @@ Logs are written through `log/slog` to stderr. The default `info` level reports
 startup, created commits, actual synchronization work, conflicts, and recovery.
 Empty scan cycles are not logged, and repeated identical errors do not create
 additional INFO or WARN entries.
+
+Git errors are reported as a command and an exit status, because Git stderr can
+contain credential URLs. Set `"log_level": "debug"` to see that stderr, along
+with a `repository state persists` entry on every cycle a repository stays
+degraded, blocked, or in conflict.
 
 - `healthy` - normal operation;
 - `degraded` - the remote is temporarily unavailable, while local commits
