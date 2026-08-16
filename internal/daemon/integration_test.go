@@ -78,6 +78,36 @@ func TestWorkerCommitsDeletionRenameAndUnusualFilename(t *testing.T) {
 	}
 }
 
+// TestWorkerCommitsPreStagedRename verifies synchronization after git mv.
+func TestWorkerCommitsPreStagedRename(t *testing.T) {
+	fixture := newTestRepository(t)
+	w, _ := newTestWorker(t, fixture.local)
+	runGit(t, fixture.local, "mv", "base.md", "renamed.md")
+	writeTestFile(t, filepath.Join(fixture.local, "renamed.md"), "renamed and edited\n")
+
+	cycleCommit(t, w)
+	runGit(t, fixture.peer, "pull", "--ff-only")
+	if _, err := os.Stat(filepath.Join(fixture.peer, "base.md")); !os.IsNotExist(err) {
+		t.Fatalf("renamed source still exists on peer: %v", err)
+	}
+	if got := readTestFile(t, filepath.Join(fixture.peer, "renamed.md")); got != "renamed and edited\n" {
+		t.Fatalf("renamed contents = %q", got)
+	}
+}
+
+// TestWorkerCommitsPreStagedDeletion verifies synchronization after git rm.
+func TestWorkerCommitsPreStagedDeletion(t *testing.T) {
+	fixture := newTestRepository(t)
+	w, _ := newTestWorker(t, fixture.local)
+	runGit(t, fixture.local, "rm", "base.md")
+
+	cycleCommit(t, w)
+	runGit(t, fixture.peer, "pull", "--ff-only")
+	if _, err := os.Stat(filepath.Join(fixture.peer, "base.md")); !os.IsNotExist(err) {
+		t.Fatalf("deleted file still exists on peer: %v", err)
+	}
+}
+
 // TestWorkerRespectsGitignore verifies ignored files stay unmanaged.
 func TestWorkerRespectsGitignore(t *testing.T) {
 	fixture := newTestRepository(t)
