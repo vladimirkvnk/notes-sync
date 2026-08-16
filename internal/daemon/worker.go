@@ -274,10 +274,18 @@ func (w *worker) commitCandidates(ctx context.Context) (bool, error) {
 	}
 
 	paths := uniquePaths(candidates)
-	args := append([]string{"add", "-A", "--"}, paths...)
-	if _, err := w.gitRun(ctx, args...); err != nil {
-		w.setBlocked(err.Error())
-		return false, err
+	stagePaths := make([]string, 0, len(candidates))
+	for _, entry := range candidates {
+		if entry.Worktree != ' ' {
+			stagePaths = append(stagePaths, entry.Path)
+		}
+	}
+	if len(stagePaths) > 0 {
+		args := append([]string{"add", "-A", "--"}, stagePaths...)
+		if _, err := w.gitRun(ctx, args...); err != nil {
+			w.setBlocked(err.Error())
+			return false, err
+		}
 	}
 
 	entries, err = w.status(ctx)
